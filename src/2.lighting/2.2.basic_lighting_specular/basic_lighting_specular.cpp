@@ -34,91 +34,6 @@ float lastFrame = 0.0f;
 // lighting
 glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
 
-struct Vertex
-{
-	glm::vec3 pos;
-	glm::vec3 n;
-};
-struct Icosahedron
-{
-	struct Mesh
-	{
-		std::vector<Vertex> vertices;
-		std::vector<glm::u16vec3> indices;
-		Mesh()
-		{
-			{
-				indices.resize(20);
-				indices[0] = glm::u16vec3(0, 2, 1);
-				indices[1] = glm::u16vec3(0, 3, 2);
-				indices[2] = glm::u16vec3(0, 4, 3);
-				indices[3] = glm::u16vec3(0, 5, 4);
-				indices[4] = glm::u16vec3(0, 1, 5);
-				indices[5] = glm::u16vec3(6, 1, 7);
-				indices[6] = glm::u16vec3(7, 1, 2);
-				indices[7] = glm::u16vec3(7, 2, 8);
-				indices[8] = glm::u16vec3(8, 2, 3);
-				indices[9] = glm::u16vec3(8, 3, 9);
-				indices[10] = glm::u16vec3(9, 3, 4);
-				indices[11] = glm::u16vec3(9, 4, 10);
-				indices[12] = glm::u16vec3(1, 4, 5);
-				indices[13] = glm::u16vec3(1, 5, 6);
-				indices[14] = glm::u16vec3(6, 5, 1);
-				indices[15] = glm::u16vec3(7, 11, 6);
-				indices[16] = glm::u16vec3(8, 11, 7);
-				indices[17] = glm::u16vec3(9, 11, 8);
-				indices[18] = glm::u16vec3(1, 11, 9);
-				indices[19] = glm::u16vec3(6, 11, 10);
-
-				{
-					GLfloat R = 0.75;
-					GLfloat a = 4 * R / sqrt(10 + 2 * sqrt(5));
-					GLfloat alpha = acos((1 - a * a / 2 / R / R));
-
-					vertices.resize(12);
-					vertices[0].pos = glm::vec3(0, 0, R);
-					vertices[1].pos = glm::vec3(R * sin(alpha) * sin(0), R * sin(alpha) * cos(0), R * cos(alpha));
-					vertices[2].pos = glm::vec3(R * sin(alpha) * sin(72 * k), R * sin(alpha) * cos(72 * k), R * cos(alpha));
-					vertices[3].pos = glm::vec3(R * sin(alpha) * sin(2 * 72 * k), R * sin(alpha) * cos(2 * 72 * k), R * cos(alpha));
-					vertices[4].pos = glm::vec3(R * sin(alpha) * sin(3 * 72 * k), R * sin(alpha) * cos(3 * 72 * k), R * cos(alpha));
-					vertices[5].pos = glm::vec3(R * sin(alpha) * sin(4 * 72 * k), R * sin(alpha) * cos(4 * 72 * k), R * cos(alpha));
-					vertices[6].pos = glm::vec3(R * sin(pi - alpha) * sin(-36 * k), R * sin(pi - alpha) * cos(-36 * k), R * cos(pi - alpha));
-					vertices[7].pos = glm::vec3(R * sin(pi - alpha) * sin(36 * k), R * sin(pi - alpha) * cos(36 * k), R * cos(pi - alpha));
-					vertices[8].pos = glm::vec3(R * sin(pi - alpha) * sin((36 + 72) * k), R * sin(pi - alpha) * cos((36 + 72) * k), R * cos(pi - alpha));
-					vertices[9].pos = glm::vec3(R * sin(pi - alpha) * sin((36 + 2 * 72) * k), R * sin(pi - alpha) * cos((36 + 2 * 72) * k), R * cos(pi - alpha));
-					vertices[10].pos = glm::vec3(R * sin(pi - alpha) * sin((36 + 3 * 72) * k), R * sin(pi - alpha) * cos((36 + 3 * 72) * k), R * cos(pi - alpha));
-					vertices[11].pos = glm::vec3(0, 0, -R);
-					{
-						for (int i = 0; i < 20; i++)
-						{
-							auto v = vertices;
-							auto idx = indices;
-							glm::vec3 normal = glm::normalize(
-								glm::cross(
-									glm::vec3(v[idx[i][1]].pos) - glm::vec3(v[idx[i][0]].pos),
-									glm::vec3(v[idx[i][2]].pos) - glm::vec3(v[idx[i][1]].pos)
-								)
-							);
-							v[idx[i][0]].n = normal;
-							v[idx[i][1]].n = normal;
-							v[idx[i][2]].n = normal;
-						}
-					}
-				}
-			}
-		};
-
-	};
-	static Mesh mesh;
-
-	static std::vector<Vertex> Tesselate(int level)
-	{
-
-	}
-};
-
-Icosahedron::Mesh Icosahedron::mesh;
-
 int main()
 {
     // glfw: initialize and configure
@@ -243,9 +158,154 @@ int main()
 		glEnableVertexAttribArray(0);
     }
     unsigned int icosahedronVAO;
-	Icosahedron icosahedron;
     {
 		unsigned int icosahedronVBO, icosahedronIBO;
+        glm::vec3 vertices[12][2]; // 3p, 3c
+        glm::u16vec3 indices[20];
+
+        {
+		   indices[0][0]=0;
+		   indices[0][1]=2;
+		   indices[0][2]=1;
+		 
+		   indices[1][0]=0;
+		   indices[1][1]=3;
+		   indices[1][2]=2;
+		 
+		   indices[2][0]=0;
+		   indices[2][1]=4;
+		   indices[2][2]=3;
+		 
+		   indices[3][0]=0;
+		   indices[3][1]=5;
+		   indices[3][2]=4;
+		 
+		   indices[4][0]=0;
+		   indices[4][1]=1;
+		   indices[4][2]=5;
+		 
+		   indices[5][0]=6;
+		   indices[5][1]=1;
+		   indices[5][2]=7;
+		 
+		   indices[6][0]=7;
+		   indices[6][1]=1;
+		   indices[6][2]=2;
+		 
+		   indices[7][0]=7;
+		   indices[7][1]=2;
+		   indices[7][2]=8;
+		 
+		   indices[8][0]=8;
+		   indices[8][1]=2;
+		   indices[8][2]=3;
+		 
+		   indices[9][0]=8;
+		   indices[9][1]=3;
+		   indices[9][2]=9;
+		 
+		   indices[10][0]=9;
+		   indices[10][1]=3;
+		   indices[10][2]=4;
+		 
+		   indices[11][0]=9;
+		   indices[11][1]=4;
+		   indices[11][2]=10;
+		 
+		   indices[12][0]=10;
+		   indices[12][1]=4;
+		   indices[12][2]=5;
+		 
+		   indices[13][0]=10;
+		   indices[13][1]=5;
+		   indices[13][2]=6;
+		 
+		   indices[14][0]=6;
+		   indices[14][1]=5;
+		   indices[14][2]=1;
+		 
+		   indices[15][0]=7;
+		   indices[15][1]=11;
+		   indices[15][2]=6;
+		 
+		   indices[16][0]=8;
+		   indices[16][1]=11;
+		   indices[16][2]=7;
+		 
+		   indices[17][0]=9;
+		   indices[17][1]=11;
+		   indices[17][2]=8;
+		 
+		   indices[18][0]=10;
+		   indices[18][1]=11;
+		   indices[18][2]=9;
+		 
+		   indices[19][0]=6;
+		   indices[19][1]=11;
+		   indices[19][2]=10;
+
+        }
+
+		{
+			GLfloat R=0.75;
+			GLfloat a=4*R/sqrt(10+2*sqrt(5));
+			GLfloat alpha=acos((1-a*a/2/R/R));
+
+			vertices[0][0]= glm::vec3(0, 0, R);
+
+			vertices[1][0] = glm::vec3(R * sin(alpha) * sin(0),	R * sin(alpha) * cos(0), R * cos(alpha));
+
+			vertices[2][0] = glm::vec3(R*sin(alpha)*sin(72*k), R*sin(alpha)*cos(72*k), R*cos(alpha));
+
+			vertices[3][0] = glm::vec3(R*sin(alpha)*sin(2*72*k),  R*sin(alpha)*cos(2*72*k), R*cos(alpha));
+
+			vertices[4][0] = glm::vec3(R*sin(alpha)*sin(3*72*k), R*sin(alpha)*cos(3*72*k), R*cos(alpha));
+
+			vertices[5][0] = glm::vec3(R*sin(alpha)*sin(4*72*k), R*sin(alpha)*cos(4*72*k), R*cos(alpha));
+
+			vertices[6][0] = glm::vec3(R*sin(pi-alpha)*sin(-36*k), R*sin(pi-alpha)*cos(-36*k), R*cos(pi-alpha));
+
+			vertices[7][0] = glm::vec3(R*sin(pi-alpha)*sin(36*k), R*sin(pi-alpha)*cos(36*k), R*cos(pi-alpha));
+
+			vertices[8][0] = glm::vec3(R*sin(pi-alpha)*sin((36+72)*k), R*sin(pi-alpha)*cos((36+72)*k), R*cos(pi-alpha));
+
+			vertices[9][0] = glm::vec3(R*sin(pi-alpha)*sin((36+2*72)*k), R*sin(pi-alpha)*cos((36+2*72)*k), R*cos(pi-alpha));
+
+			vertices[10][0] = glm::vec3(R*sin(pi-alpha)*sin((36+3*72)*k), R*sin(pi-alpha)*cos((36+3*72)*k), R*cos(pi-alpha));
+
+			vertices[11][0] = glm::vec3(0, 0, -R);
+
+			{
+				for (int i = 0; i < 20; i++)
+				{
+					auto v = vertices;
+					auto idx = indices;
+					glm::vec3 normal = glm::normalize(
+						glm::cross(
+							glm::vec3(
+								v[idx[i][1]][0]
+								) - 
+							glm::vec3(
+								v[idx[i][0]][0]
+								) 
+							,
+							glm::vec3(
+								v[idx[i][2]][0]
+								) - 
+							glm::vec3(
+								v[idx[i][1]][0]
+								) 
+						)
+					);
+					v[idx[i][0]][1] = normal;
+
+					v[idx[i][1]][1] = normal;
+
+					v[idx[i][2]][1] = normal;
+				}
+			}
+		}
+
 		glGenVertexArrays(1, &icosahedronVAO);
 		glGenBuffers(1, &icosahedronVBO);
 		glGenBuffers(1, &icosahedronIBO);
@@ -253,11 +313,11 @@ int main()
 		glBindVertexArray(icosahedronVAO);
 
 		glBindBuffer(GL_ARRAY_BUFFER, icosahedronVBO);
-		glBufferData(GL_ARRAY_BUFFER, icosahedron.mesh.vertices.size() * sizeof(Vertex), icosahedron.mesh.vertices.data(), GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
 
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, icosahedronIBO);
-		glBufferData(GL_ARRAY_BUFFER, icosahedron.mesh.indices.size() * sizeof(glm::u16vec3), icosahedron.mesh.indices.data(), GL_STATIC_DRAW);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
 		// position attribute
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
