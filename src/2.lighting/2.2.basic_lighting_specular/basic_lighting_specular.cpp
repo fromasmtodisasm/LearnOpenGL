@@ -19,6 +19,7 @@ void processInput(GLFWwindow *window);
 // settings
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
+const static float pi=3.141593, k=pi/180;
 
 // camera
 Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
@@ -32,6 +33,91 @@ float lastFrame = 0.0f;
 
 // lighting
 glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
+
+struct Vertex
+{
+	glm::vec3 pos;
+	glm::vec3 n;
+};
+struct Icosahedron
+{
+	struct Mesh
+	{
+		std::vector<Vertex> vertices;
+		std::vector<glm::u16vec3> indices;
+		Mesh()
+		{
+			{
+				indices.resize(20);
+				indices[0] = glm::u16vec3(0, 2, 1);
+				indices[1] = glm::u16vec3(0, 3, 2);
+				indices[2] = glm::u16vec3(0, 4, 3);
+				indices[3] = glm::u16vec3(0, 5, 4);
+				indices[4] = glm::u16vec3(0, 1, 5);
+				indices[5] = glm::u16vec3(6, 1, 7);
+				indices[6] = glm::u16vec3(7, 1, 2);
+				indices[7] = glm::u16vec3(7, 2, 8);
+				indices[8] = glm::u16vec3(8, 2, 3);
+				indices[9] = glm::u16vec3(8, 3, 9);
+				indices[10] = glm::u16vec3(9, 3, 4);
+				indices[11] = glm::u16vec3(9, 4, 10);
+				indices[12] = glm::u16vec3(1, 4, 5);
+				indices[13] = glm::u16vec3(1, 5, 6);
+				indices[14] = glm::u16vec3(6, 5, 1);
+				indices[15] = glm::u16vec3(7, 11, 6);
+				indices[16] = glm::u16vec3(8, 11, 7);
+				indices[17] = glm::u16vec3(9, 11, 8);
+				indices[18] = glm::u16vec3(1, 11, 9);
+				indices[19] = glm::u16vec3(6, 11, 10);
+
+				{
+					GLfloat R = 0.75;
+					GLfloat a = 4 * R / sqrt(10 + 2 * sqrt(5));
+					GLfloat alpha = acos((1 - a * a / 2 / R / R));
+
+					vertices.resize(12);
+					vertices[0].pos = glm::vec3(0, 0, R);
+					vertices[1].pos = glm::vec3(R * sin(alpha) * sin(0), R * sin(alpha) * cos(0), R * cos(alpha));
+					vertices[2].pos = glm::vec3(R * sin(alpha) * sin(72 * k), R * sin(alpha) * cos(72 * k), R * cos(alpha));
+					vertices[3].pos = glm::vec3(R * sin(alpha) * sin(2 * 72 * k), R * sin(alpha) * cos(2 * 72 * k), R * cos(alpha));
+					vertices[4].pos = glm::vec3(R * sin(alpha) * sin(3 * 72 * k), R * sin(alpha) * cos(3 * 72 * k), R * cos(alpha));
+					vertices[5].pos = glm::vec3(R * sin(alpha) * sin(4 * 72 * k), R * sin(alpha) * cos(4 * 72 * k), R * cos(alpha));
+					vertices[6].pos = glm::vec3(R * sin(pi - alpha) * sin(-36 * k), R * sin(pi - alpha) * cos(-36 * k), R * cos(pi - alpha));
+					vertices[7].pos = glm::vec3(R * sin(pi - alpha) * sin(36 * k), R * sin(pi - alpha) * cos(36 * k), R * cos(pi - alpha));
+					vertices[8].pos = glm::vec3(R * sin(pi - alpha) * sin((36 + 72) * k), R * sin(pi - alpha) * cos((36 + 72) * k), R * cos(pi - alpha));
+					vertices[9].pos = glm::vec3(R * sin(pi - alpha) * sin((36 + 2 * 72) * k), R * sin(pi - alpha) * cos((36 + 2 * 72) * k), R * cos(pi - alpha));
+					vertices[10].pos = glm::vec3(R * sin(pi - alpha) * sin((36 + 3 * 72) * k), R * sin(pi - alpha) * cos((36 + 3 * 72) * k), R * cos(pi - alpha));
+					vertices[11].pos = glm::vec3(0, 0, -R);
+					{
+						for (int i = 0; i < 20; i++)
+						{
+							auto v = vertices;
+							auto idx = indices;
+							glm::vec3 normal = glm::normalize(
+								glm::cross(
+									glm::vec3(v[idx[i][1]].pos) - glm::vec3(v[idx[i][0]].pos),
+									glm::vec3(v[idx[i][2]].pos) - glm::vec3(v[idx[i][1]].pos)
+								)
+							);
+							v[idx[i][0]].n = normal;
+							v[idx[i][1]].n = normal;
+							v[idx[i][2]].n = normal;
+						}
+					}
+				}
+			}
+		};
+
+	};
+	static Mesh mesh;
+
+	static std::vector<Vertex> Tesselate(int level)
+	{
+
+	}
+};
+
+Icosahedron::Mesh Icosahedron::mesh;
 
 int main()
 {
@@ -80,78 +166,107 @@ int main()
     Shader lightingShader("2.2.basic_lighting.vs", "2.2.basic_lighting.fs");
     Shader lampShader("2.2.lamp.vs", "2.2.lamp.fs");
 
-    // set up vertex data (and buffer(s)) and configure vertex attributes
-    // ------------------------------------------------------------------
-    float vertices[] = {
-        -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-         0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-         0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-         0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-        -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-
-        -0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
-         0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
-         0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
-         0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
-        -0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
-        -0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
-
-        -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
-        -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
-        -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
-        -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
-        -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
-        -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
-
-         0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
-         0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
-         0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
-         0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
-         0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
-         0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
-
-        -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
-         0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
-         0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
-         0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
-        -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
-
-        -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
-         0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
-         0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
-         0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
-        -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
-        -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f
-    };
     // first, configure the cube's VAO (and VBO)
     unsigned int VBO, cubeVAO;
-    glGenVertexArrays(1, &cubeVAO);
-    glGenBuffers(1, &VBO);
+    {
+		// set up vertex data (and buffer(s)) and configure vertex attributes
+		// ------------------------------------------------------------------
+		float vertices[] = {
+			-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+			 0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+			 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+			 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+			-0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+			-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
 
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+			-0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
+			 0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
+			 0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
+			 0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
+			-0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
+			-0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
 
-    glBindVertexArray(cubeVAO);
+			-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+			-0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+			-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+			-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+			-0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+			-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
 
-    // position attribute
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-    // normal attribute
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
+			 0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+			 0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+			 0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+			 0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+			 0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+			 0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
 
+			-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+			 0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+			 0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+			 0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+			-0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+			-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+
+			-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
+			 0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
+			 0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+			 0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+			-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+			-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f
+		};
+		glGenVertexArrays(1, &cubeVAO);
+		glGenBuffers(1, &VBO);
+
+		glBindBuffer(GL_ARRAY_BUFFER, VBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+		glBindVertexArray(cubeVAO);
+
+		// position attribute
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+		glEnableVertexAttribArray(0);
+		// normal attribute
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+		glEnableVertexAttribArray(1);
+
+    }
 
     // second, configure the light's VAO (VBO stays the same; the vertices are the same for the light object which is also a 3D cube)
     unsigned int lightVAO;
-    glGenVertexArrays(1, &lightVAO);
-    glBindVertexArray(lightVAO);
+    {
+		glGenVertexArrays(1, &lightVAO);
+		glBindVertexArray(lightVAO);
 
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    // note that we update the lamp's position attribute's stride to reflect the updated buffer data
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
+		glBindBuffer(GL_ARRAY_BUFFER, VBO);
+		// note that we update the lamp's position attribute's stride to reflect the updated buffer data
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+		glEnableVertexAttribArray(0);
+    }
+    unsigned int icosahedronVAO;
+	Icosahedron icosahedron;
+    {
+		unsigned int icosahedronVBO, icosahedronIBO;
+		glGenVertexArrays(1, &icosahedronVAO);
+		glGenBuffers(1, &icosahedronVBO);
+		glGenBuffers(1, &icosahedronIBO);
+
+		glBindVertexArray(icosahedronVAO);
+
+		glBindBuffer(GL_ARRAY_BUFFER, icosahedronVBO);
+		glBufferData(GL_ARRAY_BUFFER, icosahedron.mesh.vertices.size() * sizeof(Vertex), icosahedron.mesh.vertices.data(), GL_STATIC_DRAW);
+
+
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, icosahedronIBO);
+		glBufferData(GL_ARRAY_BUFFER, icosahedron.mesh.indices.size() * sizeof(glm::u16vec3), icosahedron.mesh.indices.data(), GL_STATIC_DRAW);
+
+		// position attribute
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+		glEnableVertexAttribArray(0);
+		// normal attribute
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+		glEnableVertexAttribArray(1);
+
+    }
 
 
     // render loop
@@ -191,8 +306,9 @@ int main()
         lightingShader.setMat4("model", model);
 
         // render the cube
-        glBindVertexArray(cubeVAO);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
+        //glBindVertexArray(cubeVAO);
+        glBindVertexArray(icosahedronVAO);
+        glDrawElements(GL_TRIANGLES, 20*3, GL_UNSIGNED_SHORT, nullptr);
 
 
         // also draw the lamp object
