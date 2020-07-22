@@ -79,6 +79,7 @@ int main()
     // -------------------------
     Shader shader("5.1.framebuffers.vs", "5.1.framebuffers.fs");
     Shader screenShader("5.1.framebuffers_screen.vs", "5.1.framebuffers_screen.fs");
+    Shader skyShader("5.1.framebuffers_screen.vs", "sky.fs");
 
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------
@@ -245,6 +246,14 @@ int main()
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        skyShader.use();
+        glDisable(GL_DEPTH_TEST);
+		glDepthMask(GL_FALSE);  
+        glBindVertexArray(quadVAO);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+		glDepthMask(GL_TRUE);  
+        glEnable(GL_DEPTH_TEST);
+
         shader.use();
         glm::mat4 model = glm::mat4(1.0f);
         glm::mat4 view = camera.GetViewMatrix();
@@ -275,6 +284,7 @@ int main()
         // clear all relevant buffers
         glClearColor(1.0f, 1.0f, 1.0f, 1.0f); // set clear color to white (not really necessery actually, since we won't be able to see behind the quad anyways)
         glClear(GL_COLOR_BUFFER_BIT);
+
 
         screenShader.use();
         glBindVertexArray(quadVAO);
