@@ -19,7 +19,6 @@ void processInput(GLFWwindow *window);
 // settings
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
-const static float pi=3.141593, k=pi/180;
 
 // camera
 Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
@@ -44,7 +43,7 @@ int main()
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 #ifdef __APPLE__
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // uncomment this statement to fix compilation on OS X
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
 
     // glfw window creation
@@ -79,254 +78,80 @@ int main()
     // build and compile our shader zprogram
     // ------------------------------------
     Shader lightingShader("2.2.basic_lighting.vs", "2.2.basic_lighting.fs");
-    Shader lampShader("2.2.lamp.vs", "2.2.lamp.fs");
+    Shader lightCubeShader("2.2.light_cube.vs", "2.2.light_cube.fs");
 
+    // set up vertex data (and buffer(s)) and configure vertex attributes
+    // ------------------------------------------------------------------
+    float vertices[] = {
+        -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+         0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+         0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+         0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+        -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+
+        -0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
+         0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
+         0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
+         0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
+        -0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
+
+        -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+        -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+        -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+        -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+        -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+        -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+
+         0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+         0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+         0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+         0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+         0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+         0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+
+        -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+         0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+         0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+         0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+
+        -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
+         0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
+         0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+         0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+        -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+        -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f
+    };
     // first, configure the cube's VAO (and VBO)
     unsigned int VBO, cubeVAO;
-    {
-		// set up vertex data (and buffer(s)) and configure vertex attributes
-		// ------------------------------------------------------------------
-		float vertices[] = {
-			-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-			 0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-			 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-			 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-			-0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-			-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+    glGenVertexArrays(1, &cubeVAO);
+    glGenBuffers(1, &VBO);
 
-			-0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
-			 0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
-			 0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
-			 0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
-			-0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
-			-0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-			-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
-			-0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
-			-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
-			-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
-			-0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
-			-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+    glBindVertexArray(cubeVAO);
 
-			 0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
-			 0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
-			 0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
-			 0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
-			 0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
-			 0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+    // position attribute
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+    // normal attribute
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
 
-			-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
-			 0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
-			 0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
-			 0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
-			-0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
-			-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
-
-			-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
-			 0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
-			 0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
-			 0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
-			-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
-			-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f
-		};
-		glGenVertexArrays(1, &cubeVAO);
-		glGenBuffers(1, &VBO);
-
-		glBindBuffer(GL_ARRAY_BUFFER, VBO);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-		glBindVertexArray(cubeVAO);
-
-		// position attribute
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
-		glEnableVertexAttribArray(0);
-		// normal attribute
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
-		glEnableVertexAttribArray(1);
-
-    }
 
     // second, configure the light's VAO (VBO stays the same; the vertices are the same for the light object which is also a 3D cube)
-    unsigned int lightVAO;
-    {
-		glGenVertexArrays(1, &lightVAO);
-		glBindVertexArray(lightVAO);
+    unsigned int lightCubeVAO;
+    glGenVertexArrays(1, &lightCubeVAO);
+    glBindVertexArray(lightCubeVAO);
 
-		glBindBuffer(GL_ARRAY_BUFFER, VBO);
-		// note that we update the lamp's position attribute's stride to reflect the updated buffer data
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
-		glEnableVertexAttribArray(0);
-    }
-    unsigned int icosahedronVAO;
-    {
-		unsigned int icosahedronVBO, icosahedronIBO;
-        glm::vec3 vertices[12][2]; // 3p, 3c
-        glm::u16vec3 indices[20];
-
-        {
-		   indices[0][0]=0;
-		   indices[0][1]=2;
-		   indices[0][2]=1;
-		 
-		   indices[1][0]=0;
-		   indices[1][1]=3;
-		   indices[1][2]=2;
-		 
-		   indices[2][0]=0;
-		   indices[2][1]=4;
-		   indices[2][2]=3;
-		 
-		   indices[3][0]=0;
-		   indices[3][1]=5;
-		   indices[3][2]=4;
-		 
-		   indices[4][0]=0;
-		   indices[4][1]=1;
-		   indices[4][2]=5;
-		 
-		   indices[5][0]=6;
-		   indices[5][1]=1;
-		   indices[5][2]=7;
-		 
-		   indices[6][0]=7;
-		   indices[6][1]=1;
-		   indices[6][2]=2;
-		 
-		   indices[7][0]=7;
-		   indices[7][1]=2;
-		   indices[7][2]=8;
-		 
-		   indices[8][0]=8;
-		   indices[8][1]=2;
-		   indices[8][2]=3;
-		 
-		   indices[9][0]=8;
-		   indices[9][1]=3;
-		   indices[9][2]=9;
-		 
-		   indices[10][0]=9;
-		   indices[10][1]=3;
-		   indices[10][2]=4;
-		 
-		   indices[11][0]=9;
-		   indices[11][1]=4;
-		   indices[11][2]=10;
-		 
-		   indices[12][0]=10;
-		   indices[12][1]=4;
-		   indices[12][2]=5;
-		 
-		   indices[13][0]=10;
-		   indices[13][1]=5;
-		   indices[13][2]=6;
-		 
-		   indices[14][0]=6;
-		   indices[14][1]=5;
-		   indices[14][2]=1;
-		 
-		   indices[15][0]=7;
-		   indices[15][1]=11;
-		   indices[15][2]=6;
-		 
-		   indices[16][0]=8;
-		   indices[16][1]=11;
-		   indices[16][2]=7;
-		 
-		   indices[17][0]=9;
-		   indices[17][1]=11;
-		   indices[17][2]=8;
-		 
-		   indices[18][0]=10;
-		   indices[18][1]=11;
-		   indices[18][2]=9;
-		 
-		   indices[19][0]=6;
-		   indices[19][1]=11;
-		   indices[19][2]=10;
-
-        }
-
-		{
-			GLfloat R=0.75;
-			GLfloat a=4*R/sqrt(10+2*sqrt(5));
-			GLfloat alpha=acos((1-a*a/2/R/R));
-
-			vertices[0][0]= glm::vec3(0, 0, R);
-
-			vertices[1][0] = glm::vec3(R * sin(alpha) * sin(0),	R * sin(alpha) * cos(0), R * cos(alpha));
-
-			vertices[2][0] = glm::vec3(R*sin(alpha)*sin(72*k), R*sin(alpha)*cos(72*k), R*cos(alpha));
-
-			vertices[3][0] = glm::vec3(R*sin(alpha)*sin(2*72*k),  R*sin(alpha)*cos(2*72*k), R*cos(alpha));
-
-			vertices[4][0] = glm::vec3(R*sin(alpha)*sin(3*72*k), R*sin(alpha)*cos(3*72*k), R*cos(alpha));
-
-			vertices[5][0] = glm::vec3(R*sin(alpha)*sin(4*72*k), R*sin(alpha)*cos(4*72*k), R*cos(alpha));
-
-			vertices[6][0] = glm::vec3(R*sin(pi-alpha)*sin(-36*k), R*sin(pi-alpha)*cos(-36*k), R*cos(pi-alpha));
-
-			vertices[7][0] = glm::vec3(R*sin(pi-alpha)*sin(36*k), R*sin(pi-alpha)*cos(36*k), R*cos(pi-alpha));
-
-			vertices[8][0] = glm::vec3(R*sin(pi-alpha)*sin((36+72)*k), R*sin(pi-alpha)*cos((36+72)*k), R*cos(pi-alpha));
-
-			vertices[9][0] = glm::vec3(R*sin(pi-alpha)*sin((36+2*72)*k), R*sin(pi-alpha)*cos((36+2*72)*k), R*cos(pi-alpha));
-
-			vertices[10][0] = glm::vec3(R*sin(pi-alpha)*sin((36+3*72)*k), R*sin(pi-alpha)*cos((36+3*72)*k), R*cos(pi-alpha));
-
-			vertices[11][0] = glm::vec3(0, 0, -R);
-
-			{
-				for (int i = 0; i < 20; i++)
-				{
-					auto v = vertices;
-					auto idx = indices;
-					glm::vec3 normal = glm::normalize(
-						glm::cross(
-							glm::vec3(
-								v[idx[i][1]][0]
-								) - 
-							glm::vec3(
-								v[idx[i][0]][0]
-								) 
-							,
-							glm::vec3(
-								v[idx[i][2]][0]
-								) - 
-							glm::vec3(
-								v[idx[i][1]][0]
-								) 
-						)
-					);
-					v[idx[i][0]][1] = normal;
-
-					v[idx[i][1]][1] = normal;
-
-					v[idx[i][2]][1] = normal;
-				}
-			}
-		}
-
-		glGenVertexArrays(1, &icosahedronVAO);
-		glGenBuffers(1, &icosahedronVBO);
-		glGenBuffers(1, &icosahedronIBO);
-
-		glBindVertexArray(icosahedronVAO);
-
-		glBindBuffer(GL_ARRAY_BUFFER, icosahedronVBO);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, icosahedronIBO);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-		// position attribute
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
-		glEnableVertexAttribArray(0);
-		// normal attribute
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
-		glEnableVertexAttribArray(1);
-
-    }
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    // note that we update the lamp's position attribute's stride to reflect the updated buffer data
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
 
 
     // render loop
@@ -366,21 +191,20 @@ int main()
         lightingShader.setMat4("model", model);
 
         // render the cube
-        //glBindVertexArray(cubeVAO);
-        glBindVertexArray(icosahedronVAO);
-        glDrawElements(GL_TRIANGLES, 20*3, GL_UNSIGNED_SHORT, nullptr);
+        glBindVertexArray(cubeVAO);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
 
 
         // also draw the lamp object
-        lampShader.use();
-        lampShader.setMat4("projection", projection);
-        lampShader.setMat4("view", view);
+        lightCubeShader.use();
+        lightCubeShader.setMat4("projection", projection);
+        lightCubeShader.setMat4("view", view);
         model = glm::mat4(1.0f);
         model = glm::translate(model, lightPos);
         model = glm::scale(model, glm::vec3(0.2f)); // a smaller cube
-        lampShader.setMat4("model", model);
+        lightCubeShader.setMat4("model", model);
 
-        glBindVertexArray(lightVAO);
+        glBindVertexArray(lightCubeVAO);
         glDrawArrays(GL_TRIANGLES, 0, 36);
 
 
@@ -393,7 +217,7 @@ int main()
     // optional: de-allocate all resources once they've outlived their purpose:
     // ------------------------------------------------------------------------
     glDeleteVertexArrays(1, &cubeVAO);
-    glDeleteVertexArrays(1, &lightVAO);
+    glDeleteVertexArrays(1, &lightCubeVAO);
     glDeleteBuffers(1, &VBO);
 
     // glfw: terminate, clearing all previously allocated GLFW resources.
